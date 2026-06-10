@@ -5,7 +5,6 @@ import (
 	"autoworkers/internal/queue"
 	"autoworkers/internal/store"
 	"autoworkers/internal/worker"
-	"time"
 )
 
 func main(){
@@ -14,7 +13,6 @@ func main(){
 	w :=worker.Constructor(q, s)
 	server := api.Constructor(q,s)
 	go worker.Workers(w)
-	time.Sleep(2* time.Second)
 	server.Start()
 
 }
