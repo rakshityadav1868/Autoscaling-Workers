@@ -4,25 +4,35 @@ import (
 	"autoworkers/internal/job"
 	"autoworkers/internal/queue"
 	"autoworkers/internal/store"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 )
+type SubmitJobRequest struct{
+	Type string `json:"type"`
+	Payload string `json:"payload"`
+}
 
 func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
-	fmt.Println(a.apistore)
-	fmt.Println(a.apiqueue)
-	a.count++
-	testjob := &job.Job{
-		ID: fmt.Sprintf("job-%d",a.count),
-		Type: "test",
-		Payload: "hello world",
-		Status: job.Pending,
+	if r.Method !="POST"{
+		fmt.Fprint(w,"Route method is incorrect")
+	}else{
+		var b SubmitJobRequest
+		x := json.NewDecoder(r.Body).Decode(&b)
+		fmt.Println(x)
+		a.count++
+		testjob := &job.Job{
+			ID: fmt.Sprintf("job-%d",a.count),
+			Type: b.Type,
+			Payload: b.Payload,
+			Status: job.Pending,
+		}
+		store.Create(testjob,a.apistore)
+		queue.Enqueue(a.apiqueue,testjob)
+		fmt.Fprintln(w,testjob.Status)
+		fmt.Fprintln(w,testjob.ID)
 	}
-	store.Create(testjob,a.apistore)
-	queue.Enqueue(a.apiqueue,testjob)
-	fmt.Fprintln(w,testjob.Status)
-	fmt.Fprintln(w,testjob.ID)
 
 }
 
