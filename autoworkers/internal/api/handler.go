@@ -13,6 +13,11 @@ type SubmitJobRequest struct{
 	Type string `json:"type"`
 	Payload string `json:"payload"`
 }
+type SubmitJobResponse struct{
+	ID string `json:"id"`
+	Status job.JobStatus `json:"status"`
+	Result string
+}
 
 func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
 	if r.Method !="POST"{
@@ -29,22 +34,24 @@ func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
 			Status: job.Pending,
 		}
 		store.Create(testjob,a.apistore)
+		response := &SubmitJobResponse{
+			ID : testjob.ID,
+			Status : testjob.Status,
+		}
 		queue.Enqueue(a.apiqueue,testjob)
-		fmt.Fprintln(w,testjob.Status)
-		fmt.Fprintln(w,testjob.ID)
+		json.NewEncoder(w).Encode(response)
 	}
 
 }
 
 func  (a *ApiServer) GetJob(w http.ResponseWriter, r *http.Request){
+
 	s := r.URL.Path
 	jobid := strings.Split(s,"/")
 	job := store.Get(a.apistore,jobid[2])
 	if job==nil{
 		fmt.Fprintln(w,"No jobs found")
 	}else{
-		fmt.Fprint(w,job.ID, "\n")
-		fmt.Fprint(w,job.Status, "\n")
-		fmt.Fprint(w,job.Result, "\n")
+		json.NewEncoder(w).Encode(job)
 	}
 }
