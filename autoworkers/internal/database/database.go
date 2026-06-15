@@ -64,6 +64,10 @@ func (d *Database) GetJob(id string) *job.Job{
 	j := &job.Job{
 		
 	}
-	row.Scan(&j.ID,&j.Type,&j.Payload,&j.Status,&j.Result)
+	err := row.Scan(&j.ID,&j.Type,&j.Payload,&j.Status,&j.Result)
+	if err!=nil{
+		fmt.Println(err)
+		return nil
+	}
 	return j
 }

@@ -49,7 +49,7 @@ func  (a *ApiServer) GetJob(w http.ResponseWriter, r *http.Request){
 
 	s := r.URL.Path
 	jobid := strings.Split(s,"/")
-	job := store.Get(a.apistore,jobid[2])
+	job := a.apidatabase.GetJob(jobid[2])
 	if job==nil{
 		fmt.Fprintln(w,"No jobs found")
 	}else{
