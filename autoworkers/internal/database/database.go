@@ -71,3 +71,18 @@ func (d *Database) GetJob(id string) *job.Job{
 	}
 	return j
 }
+
+func (d *Database) UpdateJob(j *job.Job){
+	query :=`
+UPDATE Jobs
+SET status = ?, result = ?
+WHERE id = ?`
+res,err := d.DB.Exec(query,j.Status,j.Result,j.ID)
+if err!=nil{
+	fmt.Println(err)
+}else{
+	fmt.Println(res)
+}
+
+
+}

@@ -12,8 +12,8 @@ import (
 func main(){
 	s := store.Constructor()
 	q := queue.Constructor()
-	w :=worker.Constructor(q, s)
 	d := database.Constructor()
+	w :=worker.Constructor(q, s,d)
 	fmt.Println(d)
 	server := api.Constructor(q,s,d)
 	go worker.Workers(w)

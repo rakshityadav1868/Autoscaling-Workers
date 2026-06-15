@@ -6,15 +6,18 @@ import (
 	"autoworkers/internal/queue"
 	"autoworkers/internal/store"
 	"fmt"
+	"autoworkers/internal/database"
 )
 type Worker struct{
 	queue *queue.Queue
 	store *store.Store
+	database *database.Database
 }
-func Constructor(queue *queue.Queue,store *store.Store ) *Worker{
+func Constructor(queue *queue.Queue,store *store.Store, database *database.Database) *Worker{
 	s := &Worker{
 		queue: queue,
 		store: store,
+		database: database,
 	}
 	return s
 
@@ -35,6 +38,7 @@ func Workers(m *Worker){
 			jobobj.Result = result
 			jobobj.Status = job.Completed
 			store.UpdateStatus(jobobj,m.store)
+			m.database.UpdateJob(jobobj)
 		}
 	}
 
