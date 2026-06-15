@@ -53,3 +53,17 @@ fmt.Println(err)
 	fmt.Println(res)
 }
 }
+
+func (d *Database) GetJob(id string) *job.Job{
+	query := `
+	SELECT id, type, payload, status, result
+	FROM Jobs
+	WHERE id = ?
+	`
+	row := d.DB.QueryRow(query,id)
+	j := &job.Job{
+		
+	}
+	row.Scan(&j.ID,&j.Type,&j.Payload,&j.Status,&j.Result)
+	return j
+}
