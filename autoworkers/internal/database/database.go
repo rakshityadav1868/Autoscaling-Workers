@@ -97,6 +97,7 @@ func (d *Database) GetAllJobs() [] * job.Job{
 		fmt.Println(err)
 		return nil
 	}
+	defer rows.Close()
 	jobs := [] *job.Job{}
 
 	for rows.Next(){

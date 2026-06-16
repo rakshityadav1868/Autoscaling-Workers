@@ -27,7 +27,8 @@ return p
 
 
 func (a *ApiServer) Start(){
-	http.HandleFunc("/jobs", a.SubmitJob)
+	http.HandleFunc("POST /jobs", a.SubmitJob)
+	http.HandleFunc("GET /jobs", a.GetAllJobs)
 	http.HandleFunc("/jobs/",a.GetJob)
 	http.ListenAndServe(":8080",nil)
 }

@@ -56,3 +56,8 @@ func  (a *ApiServer) GetJob(w http.ResponseWriter, r *http.Request){
 		json.NewEncoder(w).Encode(job)
 	}
 }
+
+func (a *ApiServer) GetAllJobs(w http.ResponseWriter, r *http.Request){
+	x := a.apidatabase.GetAllJobs()
+	json.NewEncoder(w).Encode(x)
+}
