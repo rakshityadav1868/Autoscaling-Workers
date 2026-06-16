@@ -18,7 +18,7 @@ func Constructor() *Database{
 	db, err := sql.Open("sqlite", "./taskforge.db")
 	query := `
 	CREATE TABLE IF NOT EXISTS Jobs(
-	id TEXT,
+	id TEXT PRIMARY KEY,
 	type TEXT,
 	payload TEXT,
 	status INTEGER,
