@@ -86,3 +86,35 @@ if err!=nil{
 
 
 }
+
+func (d *Database) GetAllJobs() [] * job.Job{
+	query := `
+	SELECT id,type,payload,status,result
+	FROM Jobs
+	`
+	rows,err := d.DB.Query(query)
+	if err!=nil{
+		fmt.Println(err)
+		return nil
+	}
+	jobs := [] *job.Job{}
+
+	for rows.Next(){
+		j := &job.Job{
+
+		}
+		err := rows.Scan(
+			&j.ID,
+			&j.Type,
+			&j.Payload,
+			&j.Status,
+			&j.Result,
+		)
+		if err!=nil{
+			fmt.Println(err)
+			continue
+		}
+		jobs = append(jobs, j)
+	}
+	return  jobs
+}
