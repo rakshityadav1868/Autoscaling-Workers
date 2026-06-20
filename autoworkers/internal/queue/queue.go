@@ -15,7 +15,7 @@ func Constructor() *Queue{
 
 }
 
-func Enqueue(p *Queue, x *job.Job){
+func  Enqueue(p *Queue, x *job.Job){
 	p.JobId <- x.ID
 
 }

@@ -29,3 +29,28 @@ func Constructor() *Redis{
 	return st
 	
 }
+
+
+func (r *Redis) Enqueue(jobID string){
+	ctx := context.Background()
+	x := r.Client.RPush(ctx,"jobs",jobID)
+	if x.Err()!=nil{
+		fmt.Println(x.Err())
+	}
+}
+
+func (r *Redis) Dequeue() string{
+	ctx := context.Background()
+	x := r.Client.BLPop(ctx,0,"jobs")
+	if x.Err()!=nil{
+		fmt.Println(x.Err())
+	}else{
+		result ,err := x.Result()
+		if err!=nil{
+			fmt.Println(err)
+		}else{
+			return result[1]
+		}
+	}
+	return ""
+}

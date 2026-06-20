@@ -2,7 +2,6 @@ package api
 
 import (
 	"autoworkers/internal/job"
-	"autoworkers/internal/queue"
 	"autoworkers/internal/store"
 	"encoding/json"
 	"fmt"
@@ -39,7 +38,7 @@ func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
 			ID : testjob.ID,
 			Status : testjob.Status,
 		}
-		queue.Enqueue(a.apiqueue,testjob)
+		a.apiredis.Enqueue(testjob.ID)
 		json.NewEncoder(w).Encode(response)
 	}
 

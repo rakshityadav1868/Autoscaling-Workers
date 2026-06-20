@@ -1,21 +1,21 @@
 package worker
 
 import (
+	"autoworkers/internal/database"
 	"autoworkers/internal/executor"
 	"autoworkers/internal/job"
-	"autoworkers/internal/queue"
+	"autoworkers/internal/redis"
 	"autoworkers/internal/store"
 	"fmt"
-	"autoworkers/internal/database"
 )
 type Worker struct{
-	queue *queue.Queue
+	redisqueue *redis.Redis
 	store *store.Store
 	database *database.Database
 }
-func Constructor(queue *queue.Queue,store *store.Store, database *database.Database) *Worker{
+func Constructor(redisqueue *redis.Redis,store *store.Store, database *database.Database) *Worker{
 	s := &Worker{
-		queue: queue,
+		redisqueue: redisqueue,
 		store: store,
 		database: database,
 	}
@@ -25,7 +25,7 @@ func Constructor(queue *queue.Queue,store *store.Store, database *database.Datab
 
 func Workers(m *Worker){
 	for{
-		jobId := queue.Dequeue(m.queue)
+		jobId := m.redisqueue.Dequeue()
 		jobobj := store.Get(m.store,jobId)
 		if jobobj==nil{
 			fmt.Println("No job found")

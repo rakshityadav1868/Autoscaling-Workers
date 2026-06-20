@@ -2,20 +2,20 @@ package main
 
 import (
 	"autoworkers/internal/api"
-	"autoworkers/internal/queue"
+	"autoworkers/internal/database"
+	"autoworkers/internal/redis"
 	"autoworkers/internal/store"
 	"autoworkers/internal/worker"
 	"fmt"
-	"autoworkers/internal/database"
 )
 
 func main(){
 	s := store.Constructor()
-	q := queue.Constructor()
 	d := database.Constructor()
-	w :=worker.Constructor(q, s,d)
+	r := redis.Constructor()
+	w :=worker.Constructor(r, s,d)
 	fmt.Println(d)
-	server := api.Constructor(q,s,d)
+	server := api.Constructor(r,s,d)
 	go worker.Workers(w)
 	server.Start()
 
