@@ -22,7 +22,8 @@ func Constructor() *Database{
 	type TEXT,
 	payload TEXT,
 	status INTEGER,
-	result TEXT
+	result TEXT,
+	error TEXT
 	)
 	`
 	fmt.Println("after open", err)
@@ -43,10 +44,10 @@ func Constructor() *Database{
 
 func (d *Database) SaveJob(j *job.Job){
 query := `
-INSERT INTO JOBS(ID,TYPE,PAYLOAD,STATUS,RESULT)
-VALUES(?,?,?,?,?)
+INSERT INTO JOBS(ID,TYPE,PAYLOAD,STATUS,RESULT,ERROR)
+VALUES(?,?,?,?,?,?)
 `
-res,err := d.DB.Exec(query,j.ID,j.Type,j.Payload,j.Status,j.Result)
+res,err := d.DB.Exec(query,j.ID,j.Type,j.Payload,j.Status,j.Result,j.Error)
 if err!=nil{
 fmt.Println(err)
 }else{
@@ -56,7 +57,7 @@ fmt.Println(err)
 
 func (d *Database) GetJob(id string) *job.Job{
 	query := `
-	SELECT id, type, payload, status, result
+	SELECT id, type, payload, status, result, error
 	FROM Jobs
 	WHERE id = ?
 	`
@@ -64,7 +65,7 @@ func (d *Database) GetJob(id string) *job.Job{
 	j := &job.Job{
 		
 	}
-	err := row.Scan(&j.ID,&j.Type,&j.Payload,&j.Status,&j.Result)
+	err := row.Scan(&j.ID,&j.Type,&j.Payload,&j.Status,&j.Result, &j.Error)
 	if err!=nil{
 		fmt.Println(err)
 		return nil
@@ -75,9 +76,9 @@ func (d *Database) GetJob(id string) *job.Job{
 func (d *Database) UpdateJob(j *job.Job){
 	query :=`
 UPDATE Jobs
-SET status = ?, result = ?
+SET status = ?, result = ?, error = ?
 WHERE id = ?`
-res,err := d.DB.Exec(query,j.Status,j.Result,j.ID)
+res,err := d.DB.Exec(query,j.Status,j.Result,j.Error,j.ID)
 if err!=nil{
 	fmt.Println(err)
 }else{
@@ -89,7 +90,7 @@ if err!=nil{
 
 func (d *Database) GetAllJobs() [] * job.Job{
 	query := `
-	SELECT id,type,payload,status,result
+	SELECT id,type,payload,status,result,error
 	FROM Jobs
 	`
 	rows,err := d.DB.Query(query)
@@ -110,6 +111,7 @@ func (d *Database) GetAllJobs() [] * job.Job{
 			&j.Payload,
 			&j.Status,
 			&j.Result,
+			&j.Error,
 		)
 		if err!=nil{
 			fmt.Println(err)
