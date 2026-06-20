@@ -34,20 +34,32 @@ func Workers(m *Worker){
 			fmt.Println("No job found")
 			continue
 		}else{
-			
 			jobobj.Status = job.Running
 			store.UpdateStatus(jobobj,m.store)
 			m.database.UpdateJob(jobobj)
 			result ,err := executor.Execute(jobobj)
 			if err!=nil{
-				jobobj.Status = job.Failed
-				Error := err.Error()
-				jobobj.Error = Error
-				store.UpdateStatus(jobobj,m.store)
-				m.database.UpdateJob(jobobj)
-				continue
+				jobobj.RetryCount ++
+				if jobobj.RetryCount<jobobj.MaxRetries{
+					jobobj.Status = job.Pending
+					store.UpdateStatus(jobobj,m.store)
+					m.database.UpdateJob(jobobj)
+					// retry count only when error appear
+					fmt.Printf( "Retrying %s (%d/%d)\n",jobobj.ID,jobobj.RetryCount,jobobj.MaxRetries)
+					m.redisqueue.Enqueue(jobId)	
+					continue
+				}else{
+					// permanent failure log
+					fmt.Printf( "Job %s permanently failed\n",jobobj.ID)
+					jobobj.Status = job.Failed
+					Error := err.Error()
+					jobobj.Error = Error
+					store.UpdateStatus(jobobj,m.store)
+					m.database.UpdateJob(jobobj)
+					continue
+				}
 			}else{
-
+				jobobj.Error = ""
 				jobobj.Result = result
 				jobobj.Status = job.Completed
 				store.UpdateStatus(jobobj,m.store)

@@ -19,6 +19,8 @@ type SubmitJobResponse struct{
 }
 
 func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
+
+	
 	if r.Method !="POST"{
 		fmt.Fprint(w,"Route method is incorrect")
 	}else{
@@ -31,6 +33,8 @@ func (a *ApiServer) SubmitJob(w http.ResponseWriter, r *http.Request){
 			Type: b.Type,
 			Payload: b.Payload,
 			Status: job.Pending,
+			RetryCount: 0,
+			MaxRetries: 3,
 		}
 		store.Create(testjob,a.apistore)
 		a.apidatabase.SaveJob(testjob)

@@ -20,5 +20,7 @@ type Job struct{
 	Created_time int
 	Started_time int
 	Finished_time int 
+	RetryCount int
+	MaxRetries int
 
 }
