@@ -13,10 +13,14 @@ func main(){
 	s := store.Constructor()
 	d := database.Constructor()
 	r := redis.Constructor()
-	w :=worker.Constructor(r, s,d)
+	w1 :=worker.Constructor(1,r,s,d)
+	w2 :=worker.Constructor(2,r,s,d)
+	w3 :=worker.Constructor(3,r,s,d)
 	fmt.Println(d)
 	server := api.Constructor(r,s,d)
-	go worker.Workers(w)
+	go worker.Workers(w1)
+	go worker.Workers(w2)
+	go worker.Workers(w3)
 	server.Start()
 
 }
