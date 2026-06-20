@@ -37,11 +37,22 @@ func Workers(m *Worker){
 			
 			jobobj.Status = job.Running
 			store.UpdateStatus(jobobj,m.store)
-			result := executor.Execute(jobobj)
-			jobobj.Result = result
-			jobobj.Status = job.Completed
-			store.UpdateStatus(jobobj,m.store)
 			m.database.UpdateJob(jobobj)
+			result ,err := executor.Execute(jobobj)
+			if err!=nil{
+				jobobj.Status = job.Failed
+				Error := err.Error()
+				jobobj.Error = Error
+				store.UpdateStatus(jobobj,m.store)
+				m.database.UpdateJob(jobobj)
+				continue
+			}else{
+
+				jobobj.Result = result
+				jobobj.Status = job.Completed
+				store.UpdateStatus(jobobj,m.store)
+				m.database.UpdateJob(jobobj)
+			}
 		}
 	}
 
