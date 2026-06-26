@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"time"
 
 	goredis "github.com/redis/go-redis/v9"
 )
@@ -38,7 +39,7 @@ func (r *Redis) Enqueue(jobID string){
 
 func (r *Redis) Dequeue() string{
 	ctx := context.Background()
-	x := r.Client.BLPop(ctx,0,"jobs")
+	x := r.Client.BLPop(ctx,1*time.Second,"jobs")
 	if x.Err()!=nil{
 		fmt.Println(x.Err())
 	}else{

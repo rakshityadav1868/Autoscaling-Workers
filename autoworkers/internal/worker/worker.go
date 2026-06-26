@@ -7,6 +7,7 @@ import (
 	"autoworkers/internal/metrics"
 	"autoworkers/internal/redis"
 	"autoworkers/internal/store"
+	"context"
 	"fmt"
 )
 type Worker struct{
@@ -15,14 +16,16 @@ type Worker struct{
 	store *store.Store
 	database *database.Database
 	metrics *metrics.Metrics
+	ctx context.Context
 }
-func Constructor(id int ,redisqueue *redis.Redis,store *store.Store, database *database.Database, metrics *metrics.Metrics) *Worker{
+func Constructor(id int ,redisqueue *redis.Redis,store *store.Store, database *database.Database, metrics *metrics.Metrics, context context.Context) *Worker{
 	s := &Worker{
 		id: id,
 		redisqueue: redisqueue,
 		store: store,
 		database: database,
 		metrics: metrics,
+		ctx: context,
 	}
 	return s
 
@@ -31,6 +34,15 @@ func Constructor(id int ,redisqueue *redis.Redis,store *store.Store, database *d
 func Workers(m *Worker){
 	for{
 		jobId := m.redisqueue.Dequeue()
+		if jobId==""{
+			select{
+			case <-m.ctx.Done():
+				fmt.Printf("Worker %d stopped\n", m.id)
+    			return
+			default:
+				continue	
+			}
+		}
 		fmt.Printf("Worker %d processing %s\n",m.id,jobId)
 		jobobj := store.Get(m.store,jobId)
 		if jobobj==nil{

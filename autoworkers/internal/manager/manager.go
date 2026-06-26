@@ -6,6 +6,7 @@ import (
 	"autoworkers/internal/redis"
 	"autoworkers/internal/store"
 	"autoworkers/internal/worker"
+	"context"
 	"fmt"
 	"math"
 	"time"
@@ -18,6 +19,7 @@ type Manager struct{
 	metrics *metrics.Metrics
 	workercount int
 	workers map[int]*worker.Worker
+	cancels map[int]context.CancelFunc
 }
 
 func Constructor(redisqueue *redis.Redis,store *store.Store, database *database.Database, metrics *metrics.Metrics) *Manager{
@@ -27,14 +29,17 @@ return &Manager{
 	database: database,
 	metrics: metrics,
 	workers: make(map[int]*worker.Worker),
+	cancels: make(map[int]context.CancelFunc),
 
 }
 }
 
 func (m *Manager) StartWorker(){
 	m.workercount  ++
-	w1 := worker.Constructor(m.workercount,m.redisqueue,m.store,m.database,m.metrics)
+	ctx, cancel := context.WithCancel(context.Background())
+	w1 := worker.Constructor(m.workercount,m.redisqueue,m.store,m.database,m.metrics,ctx)
 	m.workers[m.workercount] = w1
+	m.cancels[m.workercount]=cancel
 	go worker.Workers(w1)
 }
 
@@ -45,15 +50,22 @@ func (m *Manager) Start() {
 		neededworkers := m.CalculateWorkers(queuelength)
 		if neededworkers>m.workercount{
 			workerstostart:= neededworkers-m.workercount
-			for i := range workerstostart{
+			for i := 0; i<workerstostart;i++{
 				m.StartWorker()
 			}
 		}
+		if neededworkers <m.workercount{
+			workerstostop := m.workercount - neededworkers
+			for i := 0; i < workerstostop; i++ {
+        		m.StopWorker()
+    		}
+		}
 		fmt.Println(queuelength)
 		time.Sleep(1 * time.Second) 
+		}
+
 	}
 	
-}
 func (m *Manager) CalculateWorkers(queuelength int) int {
 	maxworkers := 15
 	neededworkers := math.Ceil(float64(queuelength)/5)
@@ -66,4 +78,16 @@ func (m *Manager) CalculateWorkers(queuelength int) int {
 
 		return  int(neededworkers)
 	}
+}
+
+func (m *Manager) StopWorker() {
+	if m.workercount <= 1 {
+    return
+	}	
+    id := m.workercount
+	m.cancels[id]()
+	delete(m.workers,id)
+	delete(m.cancels,id)
+	m.workercount --
+
 }
