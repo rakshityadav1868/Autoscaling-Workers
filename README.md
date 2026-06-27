@@ -6,13 +6,35 @@ TaskForge is a Go-based asynchronous job processing engine that uses Redis-backe
 
 ## System Architecture & Pipeline
 
-```
-Client ──► API Server ──► SQLite (State Archive)
-            │
-            ▼ (Enqueue Job ID)
-        Redis Queue (FIFO) ──► Worker Pool (BLPop Consumer) ──► LLM Client
+### 1. Component Connections Flowchart
+Shows what component connects to what in the execution pipeline:
+
+```mermaid
+graph TD
+    Client["Client / Caller"] -->|1. Submit HTTP Request| API["API Server (internal/api)"]
+    
+    API -->|2. Enqueue Job ID| Queue["Redis Queue (internal/redis)"]
+    Queue -->|3. Dequeue Job ID| Worker["Worker Pool (internal/worker)"]
+    Worker -->|4. Execute Task| Executor["Executor (internal/executor)"]
+    Worker -.->|Update Status| State["State Stores (SQLite DB / In-Memory Store)"]
+    Executor -->|5. Generate Call| LLM["LLM Client (internal/llm)"]
+    
+    API -.->|Save / Get Details| State
 ```
 
+### 2. Job Lifecycle State Machine
+Shows how a job transitions between states (Pending, Running, Completed, Failed):
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending : Submit Job
+    Pending --> Running : Worker Dequeue
+    Running --> Completed : Success
+    Running --> Pending : Failure & Retries < 3 (Re-enqueue)
+    Running --> Failed : Failure & Retries >= 3
+```
+
+### Core Architecture Roles
 1. **API Server**: Ingests jobs via `POST /jobs` and returns an immediate response with a job ID in milliseconds.
 2. **Redis Queue**: Acts as the message broker holding pending job IDs.
 3. **Autoscaling Manager**: Monitors queue depth and dynamically scales workers: `Ceil(QueueLength / 5)` (Min: 1, Max: 15).
