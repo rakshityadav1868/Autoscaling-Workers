@@ -110,28 +110,15 @@ The diagram below details the sequence of events and how every component integra
 
 ```mermaid
 graph TD
-    Client[Client / Caller] -->|1. Submit HTTP POST /jobs| API[API Server / internal/api]
-    API -->|2. Save Metadata| DB[(SQLite Database / internal/database)]
-    API -->|3. Cache State| Store[In-Memory Store / internal/store]
-    API -->|4. Push Job ID| Queue[Redis Queue / internal/redis]
+    Client["Client / Caller"] -->|1. Submit HTTP Request| API["API Server (internal/api)"]
     
-    Manager[Manager / internal/manager] -->|5. Poll Queue Length| Queue
-    Manager -->|6. Scale Workers| WorkerPool[Worker Pool / internal/worker]
+    API -->|2. Enqueue Job ID| Queue["Redis Queue (internal/redis)"]
+    Queue -->|3. Dequeue Job ID| Worker["Worker Pool (internal/worker)"]
+    Worker -->|4. Execute Task| Executor["Executor (internal/executor)"]
+    Worker -.->|Update Status| State["State Stores (SQLite DB / In-Memory Store)"]
+    Executor -->|5. Generate Call| LLM["LLM Client (internal/llm)"]
     
-    WorkerPool -->|7. Blocking Pop Job ID| Queue
-    WorkerPool -->|8. Fetch Job Details| Store
-    WorkerPool -->|9. Update Status running| DB
-    WorkerPool -->|10. Trigger Execution| Executor[Executor / internal/executor]
-    
-    Executor -->|11. Generate Call| LLM[LLM Client / internal/llm]
-    LLM -->|12. Chat Completions API| OpenRouter[OpenRouter AI API]
-    
-    WorkerPool -->|13. Update Status completed/failed| DB
-    WorkerPool -->|14. Update Cache| Store
-    WorkerPool -->|15. Update Counters| Metrics[Metrics / internal/metrics]
-    
-    Client -->|Query HTTP GET /jobs/:id| API
-    API -->|Read Metadata| DB
+    API -.->|Save / Get Details| State
 ```
 
 ---
@@ -200,8 +187,9 @@ The Manager operates as an active feedback loop monitoring queue depth and dynam
 ```mermaid
 flowchart TD
     Start[Manager Loop Start] --> Poll[Get Redis Queue Length]
-    Poll --> Calc[Calculate Needed Workers: Ceil queueLength / 5]
-    Calc --> Clamp[Clamp between Min: 1, Max: 15]
+    Poll --> Calc["Calculate Needed Workers: Ceil queueLength / 5"]
+    Clamp["Clamp between Min: 1, Max: 15"]
+    Calc --> Clamp
     Clamp --> Check{Needed Workers vs Current Workers}
     Check -->|Needed > Current| ScaleUp[Start Needed - Current Workers]
     Check -->|Needed < Current| ScaleDown[Stop Current - Needed Workers]
