@@ -401,5 +401,16 @@ During our technical codebase analysis, we noted a few key behavioral items to k
 
 - **Metrics Thread Safety**: The `Metrics` struct inside `internal/metrics/metrices.go` does not employ locks. The API handler increments `a.apimetrices.Pending++` directly without mutex protection, while worker threads call `m.metrics.Update(...)` concurrently. Under high concurrent workloads, this can lead to race conditions.
 - **In-Memory Store vs Database consistency**: The `store.Store` maps jobs in memory, but `GetJob` retrieves records by querying the SQLite database file directly. The in-memory cache acts as an active status cache for worker processing, but SQLite acts as the primary source of truth for read API queries.
-- **Legacy Packages**: The packages `internal/queue` (in-memory channel queue) and `internal/scheduler` (ticks timestamp loop) are fully functional but are currently unused, bypassed in favor of the active Redis queue orchestration.
+- **Future Work**: The packages `internal/queue` (in-memory channel queue) and `internal/scheduler` (ticks timestamp loop) are fully functional but are currently unused, bypassed in favor of the active Redis queue orchestration.
 - **Autoscaling Minimums**: The scaling logic always scales down to `1` rather than `0` workers when the queue is dry. This guarantees immediate pickup of jobs even under cold starts, though it occupies a background thread memory structure indefinitely.
+
+## Tech Stack
+
+- Go
+- Redis
+- SQLite
+- OpenRouter API
+- HTTP REST
+- Context
+- Goroutines
+- Mutexes
