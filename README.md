@@ -2,6 +2,9 @@
 
 Auto-Scaling Workers is a Go-based asynchronous job processing engine that uses Redis-backed queues, autoscaling worker pools, SQLite persistence, and pluggable LLM execution. It enables long-running tasks to execute in the background while HTTP APIs remain responsive.
 
+
+<img width="1408" height="768" alt="Gemini_Generated_Image_ampud1ampud1ampu" src="https://github.com/user-attachments/assets/5abdcfe7-66cf-4691-a648-6d9b1b256c0e" />
+
 ---
 
 ## System Architecture & Pipeline
